@@ -35,14 +35,14 @@ const RegisterStep2 = ({ formData, updateFormData, onNext, onBack }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-6">
-        <label className="block text-deep-green font-medium mb-3">Profile Photo (Optional)</label>
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo (Optional)</label>
         <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border-2 border-gray-200">
             {preview ? (
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-gray-400 text-3xl">📷</span>
+              <span className="text-gray-400 text-xs">No image</span>
             )}
           </div>
           <input
@@ -55,14 +55,14 @@ const RegisterStep2 = ({ formData, updateFormData, onNext, onBack }) => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-deep-green font-medium mb-2">Bio</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
         <textarea
           name="bio"
           value={localData.bio}
           onChange={handleChange}
           placeholder="Tell us about yourself..."
           rows="4"
-          className="input-field resize-none"
+          className="input-field resize-none text-sm"
         />
       </div>
 

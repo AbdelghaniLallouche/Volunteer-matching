@@ -5,8 +5,8 @@ import { SKILLS, INTERESTS } from '../../../utils/constants';
 
 const RegisterStep3 = ({ formData, updateFormData, onBack, onSubmit }) => {
   const [localData, setLocalData] = useState({
-    skills: formData.skills,
-    interests: formData.interests
+    skills: formData.skills || [],
+    interests: formData.interests || []
   });
 
   const toggleSkill = (skill) => {
@@ -29,8 +29,17 @@ const RegisterStep3 = ({ formData, updateFormData, onBack, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('Step 3 - Submitting with skills and interests:', localData);
+    
+    // Merge with formData and submit immediately
+    const completeData = { ...formData, ...localData };
+    console.log('Complete data with skills/interests:', completeData);
+    
+    // Update parent state
     updateFormData(localData);
-    onSubmit();
+    
+    // Call onSubmit with complete data
+    onSubmit(completeData);
   };
 
   return (
@@ -42,6 +51,9 @@ const RegisterStep3 = ({ formData, updateFormData, onBack, onSubmit }) => {
           selectedTags={localData.skills}
           onToggle={toggleSkill}
         />
+        <p className="text-sm text-gray-500 mt-2">
+          Selected: {localData.skills.length} skills
+        </p>
       </div>
 
       <div className="mb-8">
@@ -51,6 +63,9 @@ const RegisterStep3 = ({ formData, updateFormData, onBack, onSubmit }) => {
           selectedTags={localData.interests}
           onToggle={toggleInterest}
         />
+        <p className="text-sm text-gray-500 mt-2">
+          Selected: {localData.interests.length} interests
+        </p>
       </div>
 
       <div className="flex gap-4 mt-6">

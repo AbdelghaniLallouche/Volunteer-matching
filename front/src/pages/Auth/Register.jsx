@@ -33,8 +33,8 @@ const Register = () => {
     interests: []
   });
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user, isLoading, isError, isSuccess, message } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -60,30 +60,42 @@ const Register = () => {
     setCurrentStep(prev => prev - 1);
   };
 
-  const handleSubmit = () => {
-    dispatch(register(formData));
+  const handleSubmit = (finalData = null) => {
+    const dataToSubmit = finalData || formData;
+    console.log('Final form data before submission:', dataToSubmit);
+    console.log('Skills in final data:', dataToSubmit.skills);
+    console.log('Interests in final data:', dataToSubmit.interests);
+    dispatch(register(dataToSubmit));
   };
 
   const updateFormData = (data) => {
-    setFormData(prev => ({ ...prev, ...data }));
+    console.log('Updating form data with:', data);
+    setFormData(prev => {
+      const updated = { ...prev, ...data };
+      console.log('Updated form data:', updated);
+      return updated;
+    });
   };
 
   const isVolunteer = formData.role === 'volunteer';
   const steps = isVolunteer ? volunteerSteps : associationSteps;
-  const maxSteps = isVolunteer ? 3 : 2;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-mint-light to-vibrant-green/20 px-4 py-12">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-vibrant-green mb-2">Join Valunteer</h1>
-            <p className="text-gray-600">Start your journey of making a difference</p>
+        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-vibrant-green mb-1">
+              {isVolunteer ? 'Join Valunteer' : 'Join Association'}
+            </h1>
+            <p className="text-sm text-gray-600">
+              {isVolunteer ? 'Start your journey of making a difference' : 'Register your organization to recruit volunteers'}
+            </p>
           </div>
 
           <Stepper currentStep={currentStep} steps={steps} />
 
-          <div className="mt-8">
+          <div className="mt-6">
             {currentStep === 1 && (
               <RegisterStep1
                 formData={formData}

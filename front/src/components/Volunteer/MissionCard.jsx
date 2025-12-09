@@ -1,99 +1,75 @@
 import { Link } from 'react-router-dom';
-import Card from '../Shared/Card';
 
-const MissionCard = ({ mission, showRecommended = false }) => {
+const MissionCard = ({ mission }) => {
+  const daysUntilStart = Math.ceil((new Date(mission.startDate) - new Date()) / (1000 * 60 * 60 * 24));
+  const spotsLeft = mission.maxVolunteers - (mission.applicants?.length || 0);
+
   return (
-    <Card className="cursor-pointer group hover:scale-[1.02]">
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Mission Image */}
-        <div className="relative w-full md:w-80 h-64 md:h-48 flex-shrink-0 overflow-hidden rounded-xl">
-          <img
-            src={mission.image}
-            alt={mission.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-          />
-          <div className="absolute top-4 right-4">
-            <span className="px-3 py-1 bg-vibrant-green text-white text-xs font-semibold rounded-full shadow-lg">
-              {mission.status}
-            </span>
-          </div>
-          {showRecommended && mission.recommendationScore > 0 && (
-            <div className="absolute top-4 left-4">
-              <span className="px-3 py-1 bg-sky-blue text-white text-xs font-semibold rounded-full shadow-lg flex items-center">
-                ⭐ Recommended
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Mission Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Association Info */}
-          <Link 
-            to={`/volunteer/association/${mission.association.id}`}
-            className="flex items-center space-x-3 mb-3 cursor-pointer"
-            onClick={(e) => e.stopPropagation()}
-          >
+    <Link to={`/volunteer/missions/${mission._id}`}>
+      <div className="bg-white rounded-lg border border-gray-100 hover:border-vibrant-green/30 hover:shadow-lg transition-all duration-200 overflow-hidden group">
+        <div className="flex gap-0">
+          {/* Image - Full Height */}
+          <div className="relative w-32 flex-shrink-0 bg-gray-100">
             <img
-              src={mission.association.logo}
-              alt={mission.association.name}
-              className="w-10 h-10 rounded-lg object-cover"
+              src={mission.images?.[0] || 'https://via.placeholder.com/150'}
+              alt={mission.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            <span className="text-sm font-medium text-gray-700 hover:text-vibrant-green transition-colors">
-              {mission.association.name}
-            </span>
-          </Link>
-
-          {/* Mission Title */}
-          <h3 className="text-2xl font-bold text-deep-green mb-2 group-hover:text-vibrant-green transition-colors">
-            {mission.title}
-          </h3>
-
-          {/* Mission Description */}
-          <p className="text-gray-600 text-sm mb-4 flex-1 line-clamp-2">
-            {mission.description}
-          </p>
-
-          {/* Mission Details */}
-          <div className="flex flex-wrap items-center gap-4 mb-3">
-            <div className="flex items-center text-sm text-gray-500">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-              <span>{mission.wilaya}</span>
-            </div>
-
-            <div className="flex items-center text-sm text-gray-500">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{new Date(mission.startDate).toLocaleDateString()} - {new Date(mission.endDate).toLocaleDateString()}</span>
-            </div>
-
-            <div className="flex items-center text-sm text-gray-500">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span>{mission.volunteers}/{mission.maxVolunteers} volunteers</span>
-            </div>
           </div>
 
-          {/* Skills Tags */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {mission.requiredSkills.slice(0, 3).map((skill, index) => (
-              <span key={index} className="px-3 py-1 bg-mint-light text-deep-green text-xs font-medium rounded-full">
-                {skill}
+          {/* Content */}
+          <div className="flex-1 min-w-0 p-4">
+            {/* Title */}
+            <h3 className="font-semibold text-gray-900 text-base mb-2 line-clamp-1 uppercase group-hover:text-vibrant-green transition-colors">
+              {mission.title}
+            </h3>
+
+            {/* Description */}
+            <p className="text-xs text-gray-600 line-clamp-2 mb-3 leading-relaxed">
+              {mission.description}
+            </p>
+
+            {/* Meta Info */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
+              <span className="flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                {mission.wilaya}
               </span>
-            ))}
-          </div>
+              <span className="flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Starts in {daysUntilStart}d
+              </span>
+              <span className={`flex items-center gap-1 ${spotsLeft <= 5 ? 'text-orange-600 font-medium' : ''}`}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                {spotsLeft} spots left
+              </span>
+            </div>
 
-          {/* Apply Button */}
-          <button className="btn-primary w-full md:w-auto md:px-8 text-sm py-2 self-end">
-            Apply Now
-          </button>
+            {/* Skills */}
+            {mission.requiredSkills?.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap">
+                {mission.requiredSkills.slice(0, 4).map((skill, index) => (
+                  <span key={index} className="text-xs px-2 py-1 bg-vibrant-green/10 text-vibrant-green rounded font-medium">
+                    {skill}
+                  </span>
+                ))}
+                {mission.requiredSkills.length > 4 && (
+                  <span className="text-xs px-2 py-1 text-gray-400">
+                    +{mission.requiredSkills.length - 4}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </Card>
+    </Link>
   );
 };
 

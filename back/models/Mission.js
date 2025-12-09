@@ -68,4 +68,28 @@ const missionSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Cascade delete - remove mission references from volunteers when mission is deleted
+missionSchema.pre('deleteOne', { document: true, query: false }, async function() {
+  try {
+    const Volunteer = require('./Volunteer');
+    
+    // Remove from appliedMissions
+    await Volunteer.updateMany(
+      { 'appliedMissions.missionId': this._id },
+      { $pull: { appliedMissions: { missionId: this._id } } }
+    );
+    
+    // Remove from history
+    await Volunteer.updateMany(
+      { history: this._id },
+      { $pull: { history: this._id } }
+    );
+    
+    console.log(`Cascade delete: Removed mission ${this._id} from all volunteers`);
+  } catch (error) {
+    console.error('Cascade delete error:', error);
+    throw error;
+  }
+});
+
 module.exports = mongoose.model('Mission', missionSchema);

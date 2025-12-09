@@ -3,6 +3,7 @@ const Volunteer = require('../models/Volunteer');
 const Association = require('../models/Association');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -15,6 +16,9 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     console.log('=== REGISTRATION STARTED ===');
     console.log('Registration request body:', req.body);
@@ -25,32 +29,19 @@ exports.register = async (req, res) => {
     // Validate required fields
     if (!email || !password || !role) {
       console.log('Missing required fields');
+      await session.abortTransaction();
       return res.status(400).json({ 
         success: false, 
         message: 'Please provide email, password, and role' 
       });
     }
 
-    // Parse JSON strings if they exist
-    let skills = [];
-    let interests = [];
-    
-    try {
-      if (req.body.skills) {
-        skills = typeof req.body.skills === 'string' ? JSON.parse(req.body.skills) : req.body.skills;
-      }
-      if (req.body.interests) {
-        interests = typeof req.body.interests === 'string' ? JSON.parse(req.body.interests) : req.body.interests;
-      }
-    } catch (parseError) {
-      console.error('Error parsing skills/interests:', parseError);
-    }
-
     // Check if user exists
     console.log('Checking if user exists...');
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email }).session(session);
     if (userExists) {
       console.log('User already exists');
+      await session.abortTransaction();
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
 
@@ -59,23 +50,46 @@ exports.register = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    // Create user
+    // Create user within transaction
     console.log('Creating user...');
-    const user = await User.create({
+    const [user] = await User.create([{
       email,
       password: hashedPassword,
       role,
-      profilePhoto: req.file ? req.file.path : null
-    });
+      profilePhoto: req.file ? req.file.path : null // Cloudinary URL
+    }], { session });
 
     console.log('User created successfully:', user._id);
 
-    // Create profile based on role
+    // Create profile based on role within transaction
     if (role === 'volunteer') {
+      // Validate volunteer required fields
+      if (!req.body.firstName || !req.body.lastName) {
+        await session.abortTransaction();
+        return res.status(400).json({ 
+          success: false, 
+          message: 'First name and last name are required for volunteers' 
+        });
+      }
+
+      // Parse skills and interests
+      let skills = [];
+      let interests = [];
+      try {
+        if (req.body.skills) {
+          skills = typeof req.body.skills === 'string' ? JSON.parse(req.body.skills) : req.body.skills;
+        }
+        if (req.body.interests) {
+          interests = typeof req.body.interests === 'string' ? JSON.parse(req.body.interests) : req.body.interests;
+        }
+      } catch (parseError) {
+        console.error('Error parsing skills/interests:', parseError);
+      }
+
       const volunteerData = {
         userId: user._id,
-        firstName: req.body.firstName || '',
-        lastName: req.body.lastName || '',
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
         phone: req.body.phone || '',
         bio: req.body.bio || '',
         wilaya: req.body.wilaya || '',
@@ -84,26 +98,38 @@ exports.register = async (req, res) => {
       };
       
       console.log('Creating volunteer profile with data:', volunteerData);
-      const volunteer = await Volunteer.create(volunteerData);
-      console.log('Volunteer profile created:', volunteer._id);
+      await Volunteer.create([volunteerData], { session });
+      console.log('Volunteer profile created');
       
     } else if (role === 'association') {
+      // Validate association required fields
+      if (!req.body.associationName || !req.body.phone || !req.body.wilaya || !req.body.address || !req.body.description) {
+        await session.abortTransaction();
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Association name, phone, wilaya, address, and description are required' 
+        });
+      }
+
       const associationData = {
         userId: user._id,
-        name: req.body.associationName || '',
+        name: req.body.associationName,
         email: email,
-        phone: req.body.phone || '',
-        wilaya: req.body.wilaya || '',
-        address: req.body.address || '',
-        description: req.body.description || '',
-        logo: req.file ? req.file.path : null,
+        phone: req.body.phone,
+        wilaya: req.body.wilaya,
+        address: req.body.address,
+        description: req.body.description,
         website: req.body.website || ''
       };
       
       console.log('Creating association profile with data:', associationData);
-      const association = await Association.create(associationData);
-      console.log('Association profile created:', association._id);
+      await Association.create([associationData], { session });
+      console.log('Association profile created');
     }
+
+    // Commit transaction - everything succeeded
+    await session.commitTransaction();
+    console.log('Transaction committed successfully');
 
     const token = generateToken(user._id);
     console.log('Token generated successfully');
@@ -121,6 +147,8 @@ exports.register = async (req, res) => {
       }
     });
   } catch (error) {
+    // Rollback transaction on error
+    await session.abortTransaction();
     console.error('=== REGISTRATION ERROR ===');
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
@@ -129,6 +157,9 @@ exports.register = async (req, res) => {
       success: false, 
       message: error.message || 'Registration failed' 
     });
+  } finally {
+    // End session
+    session.endSession();
   }
 };
 

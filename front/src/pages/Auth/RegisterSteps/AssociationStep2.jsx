@@ -31,20 +31,29 @@ const AssociationStep2 = ({ formData, updateFormData, onBack, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('Association Step 2 - Submitting with data:', localData);
+    
+    // Merge with formData and submit immediately
+    const completeData = { ...formData, ...localData };
+    console.log('Complete association data:', completeData);
+    
+    // Update parent state
     updateFormData(localData);
-    onSubmit();
+    
+    // Call onSubmit with complete data
+    onSubmit(completeData);
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-6">
-        <label className="block text-deep-green font-medium mb-3">Logo / Profile Photo (Optional)</label>
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Logo (Optional)</label>
         <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+          <div className="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center border-2 border-gray-200">
             {preview ? (
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-gray-400 text-3xl">🏢</span>
+              <span className="text-gray-400 text-xs">No logo</span>
             )}
           </div>
           <input

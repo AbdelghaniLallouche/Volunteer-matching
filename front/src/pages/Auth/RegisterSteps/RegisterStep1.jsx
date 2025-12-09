@@ -32,30 +32,30 @@ const RegisterStep1 = ({ formData, updateFormData, onNext }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-6">
-        <label className="block text-deep-green font-medium mb-3">I am a:</label>
-        <div className="flex gap-4">
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-gray-700 mb-2">I am a</label>
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={() => handleRoleChange('volunteer')}
-            className={`flex-1 py-4 px-6 rounded-xl font-semibold transition-all ${
+            className={`flex-1 py-3 px-6 rounded-lg text-sm font-semibold transition-all ${
               localData.role === 'volunteer'
-                ? 'bg-vibrant-green text-white shadow-lg'
+                ? 'bg-vibrant-green text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            🙋 Volunteer
+            Volunteer
           </button>
           <button
             type="button"
             onClick={() => handleRoleChange('association')}
-            className={`flex-1 py-4 px-6 rounded-xl font-semibold transition-all ${
+            className={`flex-1 py-3 px-6 rounded-lg text-sm font-semibold transition-all ${
               localData.role === 'association'
-                ? 'bg-vibrant-green text-white shadow-lg'
+                ? 'bg-vibrant-green text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            🏢 Association
+            Association
           </button>
         </div>
       </div>

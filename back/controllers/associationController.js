@@ -6,14 +6,22 @@ const Mission = require('../models/Mission');
 // @access  Public
 exports.getAssociations = async (req, res) => {
   try {
-    const { name } = req.query;
+    const { name, wilaya, category } = req.query;
     let query = {};
 
     if (name) {
       query.name = { $regex: name, $options: 'i' };
     }
 
-    const associations = await Association.find(query);
+    if (wilaya) {
+      query.wilaya = wilaya;
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    const associations = await Association.find(query).populate('userId', 'profilePhoto');
 
     // Add mission count for each association
     const associationsWithCount = await Promise.all(
@@ -24,6 +32,7 @@ exports.getAssociations = async (req, res) => {
         });
         return {
           ...assoc.toObject(),
+          logo: assoc.userId?.profilePhoto || null,
           missionCount
         };
       })
@@ -44,7 +53,7 @@ exports.getAssociations = async (req, res) => {
 // @access  Public
 exports.getAssociation = async (req, res) => {
   try {
-    const association = await Association.findById(req.params.id);
+    const association = await Association.findById(req.params.id).populate('userId', 'profilePhoto');
 
     if (!association) {
       return res.status(404).json({ success: false, message: 'Association not found' });
@@ -58,7 +67,10 @@ exports.getAssociation = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        association,
+        association: {
+          ...association.toObject(),
+          logo: association.userId?.profilePhoto || null
+        },
         missions
       }
     });
@@ -68,11 +80,11 @@ exports.getAssociation = async (req, res) => {
 };
 
 // @desc    Get association profile
-// @route   GET /api/associations/profile
+// @route   GET /api/associations/profile/me
 // @access  Private (Association only)
 exports.getProfile = async (req, res) => {
   try {
-    const association = await Association.findOne({ userId: req.user.id });
+    const association = await Association.findOne({ userId: req.user.id }).populate('userId', 'profilePhoto email');
 
     if (!association) {
       return res.status(404).json({ success: false, message: 'Association profile not found' });
@@ -83,7 +95,10 @@ exports.getProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        association,
+        association: {
+          ...association.toObject(),
+          logo: association.userId?.profilePhoto || null
+        },
         missions
       }
     });

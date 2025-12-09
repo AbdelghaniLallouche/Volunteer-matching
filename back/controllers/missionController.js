@@ -13,11 +13,39 @@ exports.createMission = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Association profile not found' });
     }
 
+    // Parse skills and interests if they are JSON strings
+    let requiredSkills = [];
+    let interests = [];
+
+    try {
+      if (req.body.requiredSkills) {
+        requiredSkills = typeof req.body.requiredSkills === 'string' 
+          ? JSON.parse(req.body.requiredSkills) 
+          : req.body.requiredSkills;
+      }
+      if (req.body.interests) {
+        interests = typeof req.body.interests === 'string' 
+          ? JSON.parse(req.body.interests) 
+          : req.body.interests;
+      }
+    } catch (parseError) {
+      console.error('Error parsing skills/interests:', parseError);
+    }
+
     const missionData = {
-      ...req.body,
+      title: req.body.title,
+      description: req.body.description,
+      wilaya: req.body.wilaya,
+      startDate: req.body.startDate,
+      endDate: req.body.endDate,
+      maxVolunteers: req.body.maxVolunteers,
       associationId: association._id,
+      requiredSkills: requiredSkills,
+      interests: interests,
       images: req.files ? req.files.map(file => file.path) : []
     };
+
+    console.log('Creating mission with data:', missionData);
 
     const mission = await Mission.create(missionData);
 
@@ -26,6 +54,7 @@ exports.createMission = async (req, res) => {
       data: mission
     });
   } catch (error) {
+    console.error('Create mission error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -35,33 +64,22 @@ exports.createMission = async (req, res) => {
 // @access  Public
 exports.getMissions = async (req, res) => {
   try {
-    const { wilaya, startDate, endDate, skills, interests, search } = req.query;
-    
+    const { wilaya, date, search } = req.query;
     let query = { status: 'open' };
 
+    // Filter by wilaya
     if (wilaya) {
-      const wilayas = wilaya.split(',');
-      query.wilaya = { $in: wilayas };
+      query.wilaya = wilaya;
     }
 
-    if (startDate) {
-      query.startDate = { $gte: new Date(startDate) };
+    // Filter by date - find missions where the date falls within mission's date range
+    if (date) {
+      const searchDate = new Date(date);
+      query.startDate = { $lte: searchDate };
+      query.endDate = { $gte: searchDate };
     }
 
-    if (endDate) {
-      query.endDate = { $lte: new Date(endDate) };
-    }
-
-    if (skills) {
-      const skillsArray = skills.split(',');
-      query.requiredSkills = { $in: skillsArray };
-    }
-
-    if (interests) {
-      const interestsArray = interests.split(',');
-      query.interests = { $in: interestsArray };
-    }
-
+    // Search by title or description
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -70,7 +88,11 @@ exports.getMissions = async (req, res) => {
     }
 
     const missions = await Mission.find(query)
-      .populate('associationId', 'name logo')
+      .populate({
+        path: 'associationId',
+        select: 'name userId',
+        populate: { path: 'userId', select: 'profilePhoto' }
+      })
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -95,7 +117,11 @@ exports.getRecommendedMissions = async (req, res) => {
     }
 
     const missions = await Mission.find({ status: 'open' })
-      .populate('associationId', 'name logo');
+      .populate({
+        path: 'associationId',
+        select: 'name userId',
+        populate: { path: 'userId', select: 'profilePhoto' }
+      });
 
     // Calculate recommendation score
     const scoredMissions = missions.map(mission => {
@@ -138,8 +164,16 @@ exports.getRecommendedMissions = async (req, res) => {
 exports.getMission = async (req, res) => {
   try {
     const mission = await Mission.findById(req.params.id)
-      .populate('associationId', 'name logo email phone wilaya address description website')
-      .populate('applicants.volunteerId', 'firstName lastName');
+      .populate({
+        path: 'associationId',
+        select: 'name email phone wilaya address description website userId',
+        populate: { path: 'userId', select: 'profilePhoto' }
+      })
+      .populate({
+        path: 'applicants.volunteerId',
+        select: 'firstName lastName phone bio wilaya skills interests userId',
+        populate: { path: 'userId', select: 'email' }
+      });
 
     if (!mission) {
       return res.status(404).json({ success: false, message: 'Mission not found' });
@@ -202,13 +236,16 @@ exports.deleteMission = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this mission' });
     }
 
+    // Use document method to trigger cascade delete middleware
     await mission.deleteOne();
 
     res.status(200).json({
       success: true,
-      data: {}
+      data: {},
+      message: 'Mission and all related data deleted successfully'
     });
   } catch (error) {
+    console.error('Delete mission error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -348,7 +385,11 @@ exports.handleApplication = async (req, res) => {
 exports.getMissionsByAssociation = async (req, res) => {
   try {
     const missions = await Mission.find({ associationId: req.params.id })
-      .populate('associationId', 'name logo')
+      .populate({
+        path: 'associationId',
+        select: 'name userId',
+        populate: { path: 'userId', select: 'profilePhoto' }
+      })
       .sort({ createdAt: -1 });
 
     res.status(200).json({

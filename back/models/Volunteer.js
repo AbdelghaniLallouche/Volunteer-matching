@@ -10,14 +10,12 @@ const volunteerSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: true,
-    trim: true,
-    default: ''
+    trim: true
   },
   lastName: {
     type: String,
     required: true,
-    trim: true,
-    default: ''
+    trim: true
   },
   phone: {
     type: String,

@@ -1,125 +1,80 @@
-import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams , Link } from 'react-router-dom';
+import { useSearchAssociationsQuery } from '../../redux/api/associationPublicApi';
 import Card from '../../components/Shared/Card';
-
-// Mock data
-const mockAssociations = [
-  {
-    id: '1',
-    name: 'Green Earth Initiative',
-    logo: 'https://via.placeholder.com/150',
-    wilaya: 'Alger',
-    description: 'Dedicated to environmental conservation and sustainable development across Algeria.',
-    missionCount: 12,
-    category: 'Environment'
-  },
-  {
-    id: '2',
-    name: 'Hope Foundation',
-    logo: 'https://via.placeholder.com/150',
-    wilaya: 'Oran',
-    description: 'Supporting underprivileged children with education and healthcare services.',
-    missionCount: 8,
-    category: 'Education'
-  },
-  {
-    id: '3',
-    name: 'Community Care',
-    logo: 'https://via.placeholder.com/150',
-    wilaya: 'Constantine',
-    description: 'Providing essential services and support to elderly and disabled community members.',
-    missionCount: 15,
-    category: 'Elderly Care'
-  },
-  {
-    id: '4',
-    name: 'Tech for Good',
-    logo: 'https://via.placeholder.com/150',
-    wilaya: 'Blida',
-    description: 'Teaching coding and digital skills to youth in underserved areas.',
-    missionCount: 6,
-    category: 'Technology'
-  }
-];
 
 const VolunteerAssociations = () => {
   const [searchParams] = useSearchParams();
-  const [associations, setAssociations] = useState(mockAssociations);
   const searchQuery = searchParams.get('search') || '';
+  
+  const { data, isLoading, error } = useSearchAssociationsQuery(searchQuery);
 
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = mockAssociations.filter(assoc =>
-        assoc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        assoc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        assoc.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setAssociations(filtered);
-    } else {
-      setAssociations(mockAssociations);
-    }
-  }, [searchQuery]);
+  const associations = data?.data || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-vibrant-green"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-red-500">Error loading associations</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-deep-green mb-2">
-          {searchQuery ? `Search Results for "${searchQuery}"` : 'Discover Associations'}
+      <div className="mb-4">
+        <h1 className="text-lg font-semibold text-gray-900">
+          {searchQuery ? `Results for "${searchQuery}"` : 'Discover Organizations'}
         </h1>
-        <p className="text-gray-600">
-          {associations.length} {associations.length === 1 ? 'association' : 'associations'} found
+        <p className="text-xs text-gray-500 mt-0.5">
+          {associations.length} {associations.length === 1 ? 'organization' : 'organizations'}
         </p>
       </div>
 
       {associations.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-3">
           {associations.map((assoc) => (
             <Link 
-              key={assoc.id} 
-              to={`/volunteer/association/${assoc.id}`}
+              key={assoc._id} 
+              to={`/volunteer/association/${assoc._id}`}
             >
-              <Card className="cursor-pointer group">
-                <div className="flex items-start space-x-4 mb-4">
+              <div className="bg-white rounded-lg border border-gray-100 hover:border-vibrant-green/30 hover:shadow-md transition-all duration-200 overflow-hidden group">
+                <div className="flex gap-4 p-4 items-center">
                   <img
-                    src={assoc.logo}
+                    src={assoc.logo || 'https://via.placeholder.com/150'}
                     alt={assoc.name}
-                    className="w-16 h-16 rounded-xl object-cover group-hover:scale-110 transition-transform duration-300"
+                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:scale-105 transition-transform"
                   />
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-deep-green group-hover:text-vibrant-green transition-colors">
+                  
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h3 className="font-semibold text-sm text-gray-900 group-hover:text-vibrant-green transition-colors uppercase">
                       {assoc.name}
                     </h3>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <span>{assoc.wilaya}</span>
                     </div>
+                    <p className="text-xs text-gray-600">
+                      {assoc.missionCount || 0} missions
+                    </p>
                   </div>
                 </div>
-
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {assoc.description}
-                </p>
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-mint-light text-deep-green">
-                    {assoc.category}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {assoc.missionCount} missions
-                  </span>
-                </div>
-              </Card>
+              </div>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-2xl font-bold text-gray-700 mb-2">No associations found</h3>
-          <p className="text-gray-500">Try adjusting your search terms</p>
+        <div className="text-center py-12">
+          <p className="text-sm text-gray-500">No organizations found</p>
+          <p className="text-xs text-gray-400 mt-1">Try different search terms</p>
         </div>
       )}
     </div>

@@ -35,37 +35,43 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-mint-light to-vibrant-green/20 px-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-vibrant-green mb-2">Valunteer</h1>
-          <p className="text-gray-600">Welcome back! Let's make a difference.</p>
+      <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 w-full max-w-md">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-vibrant-green mb-1">
+            {formData.role === 'volunteer' ? 'Valunteer' : 'Association Portal'}
+          </h1>
+          <p className="text-sm text-gray-600">
+            {formData.role === 'volunteer'
+              ? "Welcome back! Let's make a difference."
+              : "Welcome back to your organization account."}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <label className="block text-deep-green font-medium mb-3">Login as:</label>
-            <div className="flex gap-4">
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Login as</label>
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'volunteer' })}
-                className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                   formData.role === 'volunteer'
-                    ? 'bg-vibrant-green text-white shadow-lg'
+                    ? 'bg-vibrant-green text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                🙋 Volunteer
+                Volunteer
               </button>
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, role: 'association' })}
-                className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                   formData.role === 'association'
-                    ? 'bg-vibrant-green text-white shadow-lg'
+                    ? 'bg-vibrant-green text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                🏢 Association
+                Association
               </button>
             </div>
           </div>
@@ -89,12 +95,12 @@ const Login = () => {
             required
           />
 
-          <Button type="submit" fullWidth className="mt-6" disabled={isLoading}>
+          <Button type="submit" fullWidth className="mt-5" disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Login'}
           </Button>
         </form>
 
-        <p className="text-center text-gray-600 mt-6">
+        <p className="text-center text-sm text-gray-600 mt-5">
           Don't have an account?{' '}
           <Link to="/register" className="text-vibrant-green font-semibold hover:underline">
             Register

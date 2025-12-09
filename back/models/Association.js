@@ -10,8 +10,7 @@ const associationSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true,
-    default: ''
+    trim: true
   },
   email: {
     type: String,
@@ -21,32 +20,23 @@ const associationSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    trim: true,
-    default: ''
+    trim: true
   },
   wilaya: {
     type: String,
-    required: true,
-    default: ''
+    required: true
   },
   address: {
     type: String,
-    required: true,
-    default: ''
+    required: true
   },
   description: {
     type: String,
     required: true,
-    maxlength: 1000,
-    default: ''
-  },
-  logo: {
-    type: String,
-    default: ''
+    maxlength: 1000
   },
   website: {
-    type: String,
-    default: ''
+    type: String
   },
   category: {
     type: String

@@ -23,22 +23,45 @@ export const register = createAsyncThunk(
     try {
       const formData = new FormData();
       
-      // Append all fields to FormData
-      Object.keys(userData).forEach(key => {
-        if (key === 'skills' || key === 'interests') {
-          // Send as JSON string
-          formData.append(key, JSON.stringify(userData[key]));
-        } else if (key === 'profilePhoto' && userData[key] instanceof File) {
-          // Append file
-          formData.append('profilePhoto', userData[key]);
-        } else if (key === 'logo' && userData[key] instanceof File) {
-          // Append logo as profilePhoto for backend
-          formData.append('profilePhoto', userData[key]);
-        } else if (userData[key] !== null && userData[key] !== undefined) {
-          // Append other fields
-          formData.append(key, userData[key]);
+      // Common fields
+      formData.append('email', userData.email);
+      formData.append('password', userData.password);
+      formData.append('role', userData.role);
+      
+      // Role-specific fields
+      if (userData.role === 'volunteer') {
+        formData.append('firstName', userData.firstName);
+        formData.append('lastName', userData.lastName);
+        if (userData.phone) formData.append('phone', userData.phone);
+        if (userData.bio) formData.append('bio', userData.bio);
+        if (userData.wilaya) formData.append('wilaya', userData.wilaya);
+        
+        // Ensure skills and interests are arrays
+        const skills = Array.isArray(userData.skills) ? userData.skills : [];
+        const interests = Array.isArray(userData.interests) ? userData.interests : [];
+        
+        formData.append('skills', JSON.stringify(skills));
+        formData.append('interests', JSON.stringify(interests));
+        
+        console.log('Sending skills:', skills);
+        console.log('Sending interests:', interests);
+        
+        if (userData.profilePhoto instanceof File) {
+          formData.append('profilePhoto', userData.profilePhoto);
         }
-      });
+      } else if (userData.role === 'association') {
+        formData.append('associationName', userData.associationName);
+        formData.append('phone', userData.phone);
+        formData.append('wilaya', userData.wilaya);
+        formData.append('address', userData.address);
+        formData.append('description', userData.description);
+        if (userData.website) formData.append('website', userData.website);
+        
+        // Use same field name for association logo
+        if (userData.logo instanceof File) {
+          formData.append('profilePhoto', userData.logo);
+        }
+      }
 
       console.log('Sending registration data...');
       // Log FormData contents
